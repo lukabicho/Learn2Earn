@@ -4,8 +4,8 @@ async function main() {
   console.log("🔄 Updating VeBetterDAO App ID in deployed contract...");
 
   // Contract details
-  const CONTRACT_ADDRESS = "0xa56903cf66bacca8fb5911eb759a8566bda978ac";
-  const NEW_APP_ID = "0x8201cf06f4fdce7134ec39087ca4127c972ce0fdeda5d297d8e7a7c33624247f";
+  const CONTRACT_ADDRESS = "0x0fb0bfb5504b55f3527e05a02f902f2bf237ee60";
+  const NEW_APP_ID = "0x777eccd8a042c4ecd0ab9fa74acde757cf1a30dae7ac3fb002c84cc04a4d0863";
 
   console.log("Contract:", CONTRACT_ADDRESS);
   console.log("New App ID:", NEW_APP_ID);

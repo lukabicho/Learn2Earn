@@ -1,0 +1,15 @@
+{
+  "network": "vechain_testnet",
+  "contractAddress": "0x0fb0bfb5504b55f3527e05a02f902f2bf237ee60",
+  "deploymentTime": "2025-10-31T14:17:07.227Z",
+  "constructor": {
+    "institute": "VeChain Learn2Earn Academy",
+    "x2EarnRewardsPool": "0x5F8f86B8D0Fa93cdaE20936d150175dF0205fB38",
+    "appId": "0x777eccd8a042c4ecd0ab9fa74acde757cf1a30dae7ac3fb002c84cc04a4d0863"
+  },
+  "initialState": {
+    "institute": "VeChain Learn2Earn Academy",
+    "appId": "0x777eccd8a042c4ecd0ab9fa74acde757cf1a30dae7ac3fb002c84cc04a4d0863",
+    "rewardAmount": "10000000000000000000"
+  }
+}

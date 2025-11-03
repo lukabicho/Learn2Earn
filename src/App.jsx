@@ -4,6 +4,8 @@ import WalletConnection from './components/WalletConnection';
 import StudentRegistration from './components/StudentRegistration';
 import ProofSubmissionForm from './components/ProofSubmissionForm';
 import ClaimReward from './components/ClaimReward';
+import RewardDistribution from './components/RewardDistribution';
+import AdminPanel from './components/AdminPanel';
 import { checkSubmissionStatus } from './services/api';
 import { CONTRACT_ADDRESS } from './config/contract';
 
@@ -13,6 +15,7 @@ function AppContent() {
   const [isApproved, setIsApproved] = useState(false);
   const [isClaimed, setIsClaimed] = useState(false);
   const [isRegistered, setIsRegistered] = useState(false);
+  const [showAdmin, setShowAdmin] = useState(false);
 
   useEffect(() => {
     if (account) {
@@ -61,11 +64,26 @@ function AppContent() {
       <header className="header">
         <h1>Learn2Earn</h1>
         <p>Complete learning tasks and earn B3TR tokens</p>
+        <div style={{ marginTop: 8 }}>
+          <button
+            className="btn"
+            onClick={() => setShowAdmin((s) => !s)}
+            style={{ padding: '6px 10px' }}
+          >
+            {showAdmin ? 'Hide Admin Panel' : 'Open Admin Panel'}
+          </button>
+        </div>
       </header>
 
       <div className="wallet-section">
         <WalletConnection onAccountChange={setAccount} />
       </div>
+
+      {showAdmin && (
+        <div style={{ margin: '1rem 0' }}>
+          <AdminPanel />
+        </div>
+      )}
 
       {account && (
         <>
@@ -113,7 +131,11 @@ function AppContent() {
               ) : (isApproved || submissionStatus?.approved) ? (
                 /* Show claim reward section */
                 <div className="card">
-                  <ClaimReward account={account} />
+                  <h2>Submission Approved 🎉</h2>
+                  <p>You can now claim your B3TR token reward below.</p>
+
+                  {/* Show ClaimReward component */}
+                 <ClaimReward account={account} />
                 </div>
               ) : (
                 /* Show submission form and status */

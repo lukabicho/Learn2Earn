@@ -8,7 +8,7 @@ async function main() {
   
   // You'll need to register your app on VeBetterDAO testnet first to get an APP_ID
   // For now, using a placeholder - replace with your actual APP_ID
-  const APP_ID = "0xc11b36c741e4f9f59ac2db24e78258281527780056a451c5fd3c58254875333a";
+  const APP_ID = "0x777eccd8a042c4ecd0ab9fa74acde757cf1a30dae7ac3fb002c84cc04a4d0863";
   
   // Institute name for the Learn2Earn platform
   const INSTITUTE_NAME = "VeChain Learn2Earn Academy";

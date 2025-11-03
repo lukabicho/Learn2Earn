@@ -12,6 +12,7 @@ const accounts = hasPrivateKey
   : undefined;
 
 module.exports = {
+  defaultNetwork: "vechain_testnet",
   solidity: {
     version: "0.8.20",
     settings: {

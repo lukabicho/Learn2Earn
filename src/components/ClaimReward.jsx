@@ -1,157 +1,162 @@
 import React, { useState, useEffect } from 'react';
-import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../config/contract';
+import { checkSubmissionStatus } from '../services/api';
 
-function ClaimReward({ account }) {
-  const [isClaiming, setIsClaiming] = useState(false);
-  const [claimStatus, setClaimStatus] = useState(null);
-  const [txId, setTxId] = useState(null);
-  const [isRegistered, setIsRegistered] = useState(true); // Default to true since this component only shows for registered users
-  const [isAlreadyGraded, setIsAlreadyGraded] = useState(false);
-  const [isAlreadyRewarded, setIsAlreadyRewarded] = useState(false);
+export default function ClaimReward({ account }) {
+  const [submission, setSubmission] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [status, setStatus] = useState(null);
 
+  // Fetch submission status on mount or when account changes
   useEffect(() => {
-    checkStudentStatus();
-  }, [account]);
-
-  const checkStudentStatus = async () => {
-    if (!account) return;
-
-    // Since this component uses the backend API, we don't need to check blockchain status
-    // The backend handles the smart contract interactions
-    console.log('ClaimReward component ready for account:', account);
-  };
-
-  const handleClaimReward = async () => {
     if (!account) {
-      setClaimStatus({ type: 'error', message: 'Wallet not connected' });
+      setSubmission(null);
+      setLoading(false);
       return;
     }
 
-    setIsClaiming(true);
-    setClaimStatus(null);
-
-    try {
-      // Call the backend API to claim the reward
-      const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
-      const response = await fetch(`${API_BASE_URL}/submissions/${account.toLowerCase()}/claim`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Failed to claim reward');
+    const fetchSubmission = async () => {
+      setLoading(true);
+      setStatus(null);
+      try {
+        const data = await checkSubmissionStatus(account);
+        setSubmission(data);
+      } catch (err) {
+        console.error('Error fetching submission:', err);
+        setStatus({ type: 'error', message: err.message || 'Failed to fetch submission' });
+        setSubmission(null);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      setTxId(data.txId);
-      setClaimStatus({
-        type: 'success',
-        message: data.txId === 'pending' ? 
-          'Reward claim recorded! Note: Smart contract integration is pending - this is currently a demo.' :
-          'Reward claim submitted! Transaction is being processed.'
-      });
-
-      // Refresh the student status after a delay
-      setTimeout(() => {
-        checkStudentStatus();
-      }, 3000);
-
-    } catch (error) {
-      console.error('Error claiming reward:', error);
-      setClaimStatus({
-        type: 'error',
-        message: error.message || 'Failed to claim reward. Please try again.'
-      });
-    } finally {
-      setIsClaiming(false);
-    }
-  };
-
-  // Transaction monitoring is handled by the backend
-  // No need for client-side transaction monitoring since the backend handles the claim
+    fetchSubmission();
+  }, [account]);
 
   const openExplorer = () => {
-    if (txId && txId !== 'pending') {
-      window.open(`https://explore-testnet.vechain.org/transactions/${txId}`, '_blank');
+    if (submission?.transactionHash) {
+      window.open(`https://explore-testnet.vechain.org/transactions/${submission.transactionHash}`, '_blank');
     }
   };
 
-  if (!isRegistered) {
+  if (!account) {
     return (
-      <div className="reward-section">
-        <h3>Student Registration Required</h3>
-        <p>You need to register as a student first before you can claim rewards.</p>
-        <div className="status-message info">
-          Please register as a student by paying the 1 VET registration fee.
-        </div>
+      <div style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
+        Please connect your wallet to view your rewards status.
       </div>
     );
   }
 
-  if (isAlreadyRewarded) {
+  if (loading) {
     return (
-      <div className="reward-section">
-        <h3>Reward Already Claimed</h3>
-        <p>You have already claimed your B3TR token reward for this submission.</p>
-        <div className="status-message success">
-          Your B3TR tokens have been distributed to your wallet.
-        </div>
+      <div style={{ padding: '1rem', textAlign: 'center' }}>
+        Loading submission status…
+      </div>
+    );
+  }
+
+  if (!submission) {
+    return (
+      <div style={{ padding: '1rem', textAlign: 'center', color: '#666' }}>
+        No submission found for your wallet.
       </div>
     );
   }
 
   return (
-    <div className="reward-section">
-      <h3>Congratulations! Your submission has been approved</h3>
-      <p>You can now claim your B3TR token reward</p>
-      
-      {isAlreadyGraded && (
-        <div className="status-message info">
-          Your submission has already been graded. You can claim your reward below.
+    <div className="reward-section" style={{ padding: '1.5rem', maxWidth: '600px', margin: '0 auto' }}>
+      <h3 style={{ marginBottom: '1rem' }}>🎁 Reward Status</h3>
+
+      {submission.approved ? (
+        <div style={{ 
+          padding: '1.5rem', 
+          backgroundColor: '#d4edda', 
+          borderRadius: '8px',
+          border: '1px solid #c3e6cb'
+        }}>
+          <div style={{ color: '#155724', fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+            ✅ Rewards Distributed!
+          </div>
+          <p style={{ color: '#155724', margin: '0.5rem 0' }}>
+            Your submission has been approved and B3TR tokens have been automatically distributed to your wallet.
+          </p>
+          <div style={{ 
+            marginTop: '1rem',
+            padding: '1rem',
+            backgroundColor: '#fff',
+            borderRadius: '6px',
+            fontSize: '0.9rem'
+          }}>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Reward Amount:</strong> 10 B3TR
+            </div>
+            <div style={{ marginBottom: '0.5rem' }}>
+              <strong>Approved:</strong> {new Date(submission.approvedAt).toLocaleString()}
+            </div>
+            {submission.transactionHash && (
+              <div>
+                <strong>Transaction:</strong>{' '}
+                <button
+                  onClick={openExplorer}
+                  style={{
+                    padding: '0.25rem 0.75rem',
+                    borderRadius: '4px',
+                    backgroundColor: '#007bff',
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '0.85rem',
+                    marginLeft: '0.5rem'
+                  }}
+                  onMouseOver={(e) => e.target.style.backgroundColor = '#0056b3'}
+                  onMouseOut={(e) => e.target.style.backgroundColor = '#007bff'}
+                >
+                  View on Explorer →
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div style={{ 
+          padding: '1.5rem', 
+          backgroundColor: '#fff3cd', 
+          borderRadius: '8px',
+          border: '1px solid #ffeaa7',
+          color: '#856404'
+        }}>
+          <div style={{ fontWeight: 'bold', marginBottom: '0.5rem', fontSize: '1.1rem' }}>
+            ⏳ Pending Review
+          </div>
+          <p style={{ margin: '0.5rem 0' }}>
+            Your submission is currently being reviewed by our team. Once approved, rewards will be automatically distributed to your wallet.
+          </p>
+          <div style={{ 
+            marginTop: '1rem',
+            padding: '0.75rem',
+            backgroundColor: '#fff',
+            borderRadius: '6px',
+            fontSize: '0.85rem',
+            color: '#666'
+          }}>
+            <strong>Note:</strong> No action required from you. Rewards are distributed automatically upon approval.
+          </div>
         </div>
       )}
-      
-      <button
-        className="btn btn-success"
-        onClick={handleClaimReward}
-        disabled={isClaiming}
-      >
-        {isClaiming ? (
-          <>
-            <span className="loading"></span> Claiming Reward...
-          </>
-        ) : (
-          'Claim Reward'
-        )}
-      </button>
 
-      {claimStatus && (
-        <div className={`status-message ${claimStatus.type}`}>
-          {claimStatus.message}
-          {txId && claimStatus.type === 'success' && (
-            <div style={{ marginTop: '0.5rem' }}>
-              <button
-                onClick={openExplorer}
-                style={{
-                  background: 'transparent',
-                  border: '1px solid currentColor',
-                  padding: '0.25rem 0.5rem',
-                  borderRadius: '4px',
-                  cursor: 'pointer',
-                  fontSize: '0.9rem'
-                }}
-              >
-                View on Explorer
-              </button>
-            </div>
-          )}
+      {status && (
+        <div 
+          style={{ 
+            marginTop: '1rem',
+            padding: '0.75rem',
+            borderRadius: '6px',
+            backgroundColor: status.type === 'error' ? '#f8d7da' : '#d1ecf1',
+            border: `1px solid ${status.type === 'error' ? '#f5c6cb' : '#bee5eb'}`,
+            color: status.type === 'error' ? '#721c24' : '#0c5460'
+          }}
+        >
+          {status.message}
         </div>
       )}
     </div>
   );
 }
-
-export default ClaimReward;
